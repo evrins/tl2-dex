@@ -6,8 +6,8 @@ browser, built with **Rust + GPUI + TSX** through
 
 - **Rust** (`src/lib.rs`) owns the data: it embeds the exported `base.mdb`,
   reimplements the original SQL filters (tree categories, rarity, stat ranges,
-  requirements, `texteffect LIKE` effect filters), computes DPS, serves icons as
-  `data:` URIs and persists favorites.
+  requirements, `texteffect LIKE` effect filters), computes DPS, serves icons
+  through NSH asset URLs and persists favorites.
 - **TSX** (`App.tsx`) owns the UI: tree, filter builder, virtualized result
   list, item card, search, favorites, about box.
 - **GPUI** is the native renderer: `nsh run App.tsx --target gpui` opens the
@@ -27,7 +27,7 @@ browser, built with **Rust + GPUI + TSX** through
 | `scripts/build_affix_i18n.py` | game translation tables → localized affixes and descriptions |
 | `scripts/build_set_names.py` | game translation tables → localized set names |
 | `data/*.json`, `data/names.json`, `data/i18n.json`, `data/affix_i18n.json`, `data/descriptions.json`, `data/set_names.json` | generated, embedded with `include_str!` |
-| `icons/`, `pic/`, `base.mdb`, `TIDBI.exe` | original tool assets (icons are read at runtime) |
+| `assets/icons/`, `pic/`, `base.mdb`, `TIDBI.exe` | original tool assets; the icons are the crate's NSH assets (`assets!()`), served at `asset:/@nsh-app-tidbi/icons/…` on every target |
 | `App.test.tsx` | headless UI tests |
 
 ## Data pipeline
@@ -139,8 +139,10 @@ fails with `failed to find tool "llvm-ar"`. Without the LLVM clang the build
 stops at `unable to create target: 'No available targets are compatible with
 triple "wasm32-unknown-unknown"'`.
 
-The web build has no file system, so `Db.icon` cannot read `icons/`: items
-render without artwork there (the desktop and GPUI targets keep it).
+Icons are compiled in as assets rather than read from disk at run time, so the
+web build shows them too: `nsh run` serves `asset:/@nsh-app-tidbi/icons/…` as
+`/assets/@nsh-app-tidbi/icons/…`, and `nsh package` copies the same files into
+the app's `nsh/assets/…`.
 
 ## Features
 
@@ -164,8 +166,8 @@ render without artwork there (the desktop and GPUI targets keep it).
 - Favorites persist to `~/Library/Application Support/com.mytorchlight.tidbi/favorites.json`
   (Windows: `%APPDATA%`); copy the console name from its field or the
   toolbar button; lock the card for comparison; about box.
-- 66 icon names in the original data have no file in `icons/`; they fall back
-  to `IG_skill_empty_result.png`, the same placeholder the original used.
+- 66 icon names in the original data have no file in `assets/icons/`; they fall
+  back to `IG_skill_empty_result.png`, the same placeholder the original used.
 
 ## Differences from the original
 

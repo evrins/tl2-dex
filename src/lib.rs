@@ -6,7 +6,6 @@
 //! stat ranges, requirements and `texteffect LIKE` conditions) and exports the
 //! result to the TSX UI as a native module.
 
-use base64::Engine as _;
 use nsh_core::prelude::*;
 use serde_json::{json, Value};
 use std::sync::{LazyLock, Mutex};
@@ -22,7 +21,11 @@ const AFFIX_JSON: &str = include_str!("../data/affix_i18n.json");
 const DESCRIPTIONS_JSON: &str = include_str!("../data/descriptions.json");
 const SET_NAMES_JSON: &str = include_str!("../data/set_names.json");
 const I18N_JSON: &str = include_str!("../data/i18n.json");
-const ICON_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/icons");
+/// Icons ship as this crate's assets (`assets/icons/`, `assets!()`), so every
+/// target — the web build included, which has no file system — loads them
+/// through NSH's asset URLs instead of `data:` URIs built by reading files.
+const ICON_PREFIX: &str = "asset:/@nsh-app-tidbi/icons/";
+const ICON_PLACEHOLDER: &str = "asset:/@nsh-app-tidbi/icons/IG_skill_empty_result.png";
 
 /// Favorites are kept in a JSON file next to the app's data. NSH Storage
 /// needs the reactive runtime, which is unavailable at bundle startup and in
@@ -60,7 +63,7 @@ fn save_favorites(favs: &HashSet<String>) {
 /// The app's UI set: what `App.tsx` imports from `tidbi/native`.
 #[native_module("tidbi/native")]
 fn native(registry: &mut Registry) {
-    registry.module::<Db>();
+    registry.assets(assets!()).module::<Db>();
 }
 
 struct Item(Value);
@@ -551,13 +554,7 @@ impl Db {
     /// Tree nodes, filter options and database counts, as one JSON object.
     pub fn options() -> String {
         let d = db();
-        let icons = std::fs::read_dir(ICON_DIR)
-            .map(|it| {
-                it.filter_map(Result::ok)
-                    .filter(|e| e.path().extension().is_some_and(|x| x == "png"))
-                    .count()
-            })
-            .unwrap_or(0);
+        let icons = assets!().len();
         let tree: Vec<Value> = d
             .nodes
             .iter()
@@ -770,22 +767,17 @@ impl Db {
         .to_string()
     }
 
-    /// A `data:image/png;base64,…` URI for `icons/<name>.png`, or the
-    /// original tool's placeholder when the icon is missing.
+    /// The `asset:/` URI of `icons/<name>.png`, or the original tool's
+    /// placeholder when the database names an icon the assets do not ship
+    /// (66 names have no file in the 2014 tool either).
     pub fn icon(name: String) -> String {
-        let root = std::path::Path::new(ICON_DIR);
-        let mut p = root.join(format!("{}.png", name));
-        if !p.exists() {
-            p = root.join("IG_skill_empty_result.png");
-        }
-        std::fs::read(p)
-            .map(|bytes| {
-                format!(
-                    "data:image/png;base64,{}",
-                    base64::engine::general_purpose::STANDARD.encode(bytes)
-                )
-            })
-            .unwrap_or_default()
+        let wanted = format!("{ICON_PREFIX}{name}.png");
+        assets!()
+            .iter()
+            .map(|file| file.uri)
+            .find(|uri| *uri == wanted)
+            .unwrap_or(ICON_PLACEHOLDER)
+            .to_owned()
     }
 
     /// Toggle a favorite. Returns the new state; persisted to a JSON file.

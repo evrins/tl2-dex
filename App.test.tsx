@@ -7,6 +7,7 @@ test("renders the item database from base.mdb", async () => {
   expect(texts).toContain("Torchlight II · Item Database");
   expect(texts).toContain("Select an item");
   expect(texts).toContain("6050 / 6050 items");
+  expect(texts).toContain("6050 items · 81 Sets · 1053 icons");
   expect(texts).toContain("All Items");
   expect(texts).toContain("Favorites");
   expect(texts).toContain("简体中文");
@@ -59,7 +60,11 @@ test("native module serves localized item detail, icons and queries", () => {
   expect(d.names["zh-Hant"]).toBe("農夫弩");
   expect(d.names["ru"]).toBe("Арбалет крестьянина");
   expect(d.dps).toBe(34);
-  expect(Db.icon("icon_weapon_crossbow02").startsWith("data:image/png;base64,")).toBe(true);
+  expect(Db.icon("icon_weapon_crossbow02")).toBe(
+    "asset:/@nsh-app-tidbi/icons/icon_weapon_crossbow02.png",
+  );
+  // 66 names in the 2014 data have no file; they get the tool's placeholder.
+  expect(Db.icon("amulet3")).toBe("asset:/@nsh-app-tidbi/icons/IG_skill_empty_result.png");
   const q = JSON.parse(Db.query(JSON.stringify({ node: "all", q: "农夫", filters: [], lang: "zh-Hans" })));
   expect(q.total).toBeGreaterThan(0);
   const en = JSON.parse(Db.query(JSON.stringify({ node: "all", q: "Peasant", filters: [], lang: "en" })));
