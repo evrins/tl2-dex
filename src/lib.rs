@@ -1,4 +1,4 @@
-//! TIDBI data core.
+//! tl2-dex data core.
 //!
 //! The original tool is a Delphi 7 / ADO front end over `base.mdb` (Jet 4).
 //! `scripts/export_mdb.py` converts that database to JSON; this crate embeds

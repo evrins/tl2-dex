@@ -1,4 +1,4 @@
-# TIDBI — Torchlight II Item Database
+# tl2-dex — Torchlight II Item Database
 
 A native reimplementation of the 2014 `TIDBI.exe` (Delphi 7 + ADO/Jet) item
 browser, built with **Rust + GPUI + TSX** through
@@ -149,7 +149,7 @@ the app's `nsh/assets/…`.
 
 `nsh package --target web` writes a static site — `index.html`,
 `nsh.<digest>.wasm` (13.6 MB), `app.<digest>.js`, `assets/…` — into
-`.nsh/out/TIDBI`, 1139 files. `wrangler.jsonc` uploads that directory as a
+`.nsh/out/tl2-dex`, 1139 files. `wrangler.jsonc` uploads that directory as a
 static-only Worker: it declares no `main`, so every request is an asset and
 none is billed as a Worker invocation.
 
@@ -158,9 +158,9 @@ npx wrangler login          # once
 scripts/deploy_web.sh       # nsh package --target web + headers + deploy
 ```
 
-That is `nsh package --target web`, `cp deploy/_headers .nsh/out/TIDBI/`, and
+That is `nsh package --target web`, `cp deploy/_headers .nsh/out/tl2-dex/`, and
 `npx wrangler deploy`. The site fits Workers Free (20,000 files, 25 MiB per
-file); the default domain is `tidbi.<account>.workers.dev`, and a custom domain
+file); the default domain is `tl2-dex.<account>.workers.dev`, and a custom domain
 is added in the dashboard (Workers → the Worker → Settings → Domains).
 
 `deploy/_headers` exists because Workers serves a static file with
@@ -176,7 +176,7 @@ Workers answers `/assets/@nsh-app-tidbi/…` with a 307 to the percent-encoded
 `/assets/%40nsh-app-tidbi/…`; the redirect also carries the `immutable` header
 and is cached, so it costs one extra request per icon on the first visit only.
 
-Pages instead of Workers: `npx wrangler pages deploy .nsh/out/TIDBI`.
+Pages instead of Workers: `npx wrangler pages deploy .nsh/out/tl2-dex`.
 
 ## Features
 

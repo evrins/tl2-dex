@@ -1,12 +1,12 @@
 {
   // Static-only Worker: `nsh package --target web` writes the site to
-  // .nsh/out/TIDBI (index.html, nsh.<digest>.wasm, app.<digest>.js and
+  // .nsh/out/tl2-dex (index.html, nsh.<digest>.wasm, app.<digest>.js and
   // assets/@nsh-app-tidbi/icons/…), and Wrangler uploads that directory.
   // No "main": there is no Worker script, every request is a static asset.
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
-  "name": "tidbi",
+  "name": "tl2-dex",
   "compatibility_date": "2026-11-04",
   "assets": {
-    "directory": "./.nsh/out/TIDBI"
+    "directory": "./.nsh/out/tl2-dex"
   }
 }
