@@ -1,0 +1,8 @@
+{
+  "name": "TIDBI",
+  "id": "com.mytorchlight.tidbi",
+  "version": "1.0.5",
+  "build": 1,
+  "rust": ".",
+  "appearance": "dark"
+}
