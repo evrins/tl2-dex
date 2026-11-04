@@ -3,6 +3,7 @@
   "id": "com.mytorchlight.tidbi",
   "version": "1.0.5",
   "build": 1,
+  "icon": "icon.png",
   "rust": ".",
   "appearance": "dark"
 }

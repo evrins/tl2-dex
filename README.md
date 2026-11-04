@@ -19,6 +19,7 @@ browser, built with **Rust + GPUI + TSX** through
 | Path | What |
 |---|---|
 | `nsh.json`, `tsconfig.json`, `Cargo.toml` | NSH app / TS / Rust crate |
+| `icon.png` | app icon (`nsh.json` `"icon"`): the 2014 tool's 256 px emblem on the app's `#12141a`, 1024 px; `nsh package` derives the favicon (32), `apple-touch-icon` (180) and manifest icons (192, 512) from it |
 | `App.tsx` | TSX UI, imports `Db` from `tidbi/native` |
 | `src/lib.rs` | Rust native module `Db` + data/query engine + unit tests |
 | `scripts/export_mdb.py` | `base.mdb` → `data/*.json` (uses `mdb-export`) |
