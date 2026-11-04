@@ -120,6 +120,28 @@ cargo test                      # data/query unit tests
 
 Needs the 0.4 CLI (`nsh --version`); `cargo test` alone needs no `nsh`.
 
+### Web target
+
+`nsh run --target web` also cross-compiles the Rust crate to
+`wasm32-unknown-unknown`, and `zstd-sys` (through `nsh-base`) compiles C for it.
+Apple's clang has no WebAssembly backend, so install Homebrew LLVM and point
+cc-rs at it for that target only — in `~/.cargo/config.toml`, since a machine
+path does not belong in this repository:
+
+```toml
+[env]
+CC_wasm32_unknown_unknown = { value = "/opt/homebrew/opt/llvm/bin/clang", force = true }
+AR_wasm32_unknown_unknown = { value = "/opt/homebrew/opt/llvm/bin/llvm-ar", force = true }
+```
+
+`force = true` is needed: the build otherwise keeps its own `llvm-ar` and
+fails with `failed to find tool "llvm-ar"`. Without the LLVM clang the build
+stops at `unable to create target: 'No available targets are compatible with
+triple "wasm32-unknown-unknown"'`.
+
+The web build has no file system, so `Db.icon` cannot read `icons/`: items
+render without artwork there (the desktop and GPUI targets keep it).
+
 ## Features
 
 - Tree: Armor / Weapons (one- and two-handed) / Accessories / For Pets /
