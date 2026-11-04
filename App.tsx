@@ -239,7 +239,7 @@ function NumInput(props: { value: string; onChange: (v: string) => void; placeho
   return (
     <Input
       value={props.value}
-      onChange={props.onChange}
+      onChange={({ value }) => props.onChange(value)}
       placeholder={props.placeholder}
       keyboardType="decimal-pad"
       style={{
@@ -659,7 +659,7 @@ function App() {
         <View style={{ width: 12 }} />
         <Input
           value={q()}
-          onChange={(t) => q.set(t)}
+          onChange={({ value }) => q.set(value)}
           onSubmit={() => apply()}
           placeholder="Search name (any language)…"
           returnKeyType="search"
@@ -731,12 +731,12 @@ function App() {
                   borderLeftColor: rarityColor(r()[8]),
                 }}
               >
-                <Image src={icon(r()[3])} resizeMode="contain" style={{ width: 30, height: 30 }} />
+                <Image src={icon(r()[3])} style={{ width: 30, height: 30, objectFit: "contain" }} />
                 <View style={{ flex: 1, minWidth: 0 }}>
-                  <Text style={{ color: rarityColor(r()[8]), fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
+                  <Text style={{ color: rarityColor(r()[8]), fontSize: 13, fontWeight: "600", numberOfLines: 1 }}>
                     {r()[1]}
                   </Text>
-                  <Text style={{ color: C.faint, fontSize: 10 }} numberOfLines={1}>
+                  <Text style={{ color: C.faint, fontSize: 10, numberOfLines: 1 }}>
                     {unitLabel(r()[6])}{r()[1] !== r()[11] ? ` · ${r()[11]}` : ""}{r()[10] ? ` · ${r()[10]}` : ""}
                   </Text>
                 </View>
@@ -771,7 +771,7 @@ function App() {
               <View style={{ padding: 12, gap: 8 }}>
                 <View style={{ flexDirection: "row", gap: 12, alignItems: "center" }}>
                   <View style={{ width: 64, height: 64, borderRadius: 8, backgroundColor: rarityBg(detail().rarity), borderWidth: 1, borderColor: rarityColor(detail().rarity), alignItems: "center", justifyContent: "center" }}>
-                    <Image src={iconSrc()} resizeMode="contain" style={{ width: 56, height: 56 }} />
+                    <Image src={iconSrc()} style={{ width: 56, height: 56, objectFit: "contain" }} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: rarityColor(detail().rarity), fontSize: 15, fontWeight: "700" }}>{detail().n}</Text>

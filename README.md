@@ -2,7 +2,7 @@
 
 A native reimplementation of the 2014 `TIDBI.exe` (Delphi 7 + ADO/Jet) item
 browser, built with **Rust + GPUI + TSX** through
-[Native Shell](https://nsh.dev) 0.3:
+[Native Shell](https://nsh.dev) 0.4:
 
 - **Rust** (`src/lib.rs`) owns the data: it embeds the exported `base.mdb`,
   reimplements the original SQL filters (tree categories, rarity, stat ranges,
@@ -111,16 +111,14 @@ nodes, the card's Set field and the text card all resolve through it.
 ## Run
 
 ```bash
-/Users/evrins/.nsh/bin/nsh run App.tsx --target gpui   # GPUI backend
-/Users/evrins/.nsh/bin/nsh run                         # native desktop backend
-/Users/evrins/.nsh/bin/nsh check                       # Rust + TS type check
-/Users/evrins/.nsh/bin/nsh test                        # cargo test + headless UI tests
-cargo test                                             # data/query unit tests
+nsh run App.tsx --target gpui   # GPUI backend
+nsh run                         # native desktop backend
+nsh check                       # Rust + TS type check
+nsh test                        # cargo test + headless UI tests
+cargo test                      # data/query unit tests
 ```
 
-Use the 0.3 CLI explicitly if an older `nsh` (0.2) is earlier on `PATH`:
-`~/.nsh/bin/nsh --version`. NSH 0.2 rejects the generated `nsh-*` `^0.3.0`
-dependencies.
+Needs the 0.4 CLI (`nsh --version`); `cargo test` alone needs no `nsh`.
 
 ## Features
 
