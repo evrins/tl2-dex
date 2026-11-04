@@ -144,6 +144,39 @@ web build shows them too: `nsh run` serves `asset:/@nsh-app-tidbi/icons/…` as
 `/assets/@nsh-app-tidbi/icons/…`, and `nsh package` copies the same files into
 the app's `nsh/assets/…`.
 
+### Deploy (Cloudflare Workers)
+
+`nsh package --target web` writes a static site — `index.html`,
+`nsh.<digest>.wasm` (13.6 MB), `app.<digest>.js`, `assets/…` — into
+`.nsh/out/TIDBI`, 1139 files. `wrangler.jsonc` uploads that directory as a
+static-only Worker: it declares no `main`, so every request is an asset and
+none is billed as a Worker invocation.
+
+```bash
+npx wrangler login          # once
+scripts/deploy_web.sh       # nsh package --target web + headers + deploy
+```
+
+That is `nsh package --target web`, `cp deploy/_headers .nsh/out/TIDBI/`, and
+`npx wrangler deploy`. The site fits Workers Free (20,000 files, 25 MiB per
+file); the default domain is `tidbi.<account>.workers.dev`, and a custom domain
+is added in the dashboard (Workers → the Worker → Settings → Domains).
+
+`deploy/_headers` exists because Workers serves a static file with
+`Cache-Control: public, max-age=0, must-revalidate` by default: the files whose
+names carry a content digest (`nsh.<digest>.wasm`, `app.<digest>.js`,
+`assets/…/<name>.<digest>.png`) are marked `immutable` for a year instead, while
+`index.html` keeps the revalidating default. Checked with `wrangler dev`:
+`nsh.<digest>.wasm` is served as `application/wasm` (what
+`WebAssembly.compileStreaming` needs), the icons and the wasm as `immutable`,
+`index.html` as `must-revalidate`.
+
+Workers answers `/assets/@nsh-app-tidbi/…` with a 307 to the percent-encoded
+`/assets/%40nsh-app-tidbi/…`; the redirect also carries the `immutable` header
+and is cached, so it costs one extra request per icon on the first visit only.
+
+Pages instead of Workers: `npx wrangler pages deploy .nsh/out/TIDBI`.
+
 ## Features
 
 - Tree: Armor / Weapons (one- and two-handed) / Accessories / For Pets /

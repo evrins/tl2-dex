@@ -1,0 +1,18 @@
+# Cloudflare Workers static assets: Workers serves every file with
+# "Cache-Control: public, max-age=0, must-revalidate" by default. Every file
+# `nsh package --target web` writes carries a content digest in its name
+# (nsh.<digest>.wasm, app.<digest>.js, assets/…/<name>.<digest>.png), so the
+# digest-named ones never change and can be cached for good; index.html and
+# the manifest keep the default revalidation.
+/app.*.js
+  Cache-Control: public, max-age=31536000, immutable
+/nsh.*.js
+  Cache-Control: public, max-age=31536000, immutable
+/nsh.*.wasm
+  Cache-Control: public, max-age=31536000, immutable
+/nsh-*.bin
+  Cache-Control: public, max-age=31536000, immutable
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/browser.*
+  Cache-Control: public, max-age=31536000, immutable
