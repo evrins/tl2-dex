@@ -1,7 +1,7 @@
 {
   // Static-only Worker: `nsh package --target web` writes the site to
   // .nsh/out/tl2-dex (index.html, nsh.<digest>.wasm, app.<digest>.js and
-  // assets/@nsh-app-tidbi/icons/…), and Wrangler uploads that directory.
+  // assets/@nsh-app-tl2-dex/icons/…), and Wrangler uploads that directory.
   // No "main": there is no Worker script, every request is a static asset.
   "$schema": "https://unpkg.com/wrangler/config-schema.json",
   "name": "tl2-dex",

@@ -24,8 +24,9 @@ const I18N_JSON: &str = include_str!("../data/i18n.json");
 /// Icons ship as this crate's assets (`assets/icons/`, `assets!()`), so every
 /// target — the web build included, which has no file system — loads them
 /// through NSH's asset URLs instead of `data:` URIs built by reading files.
-const ICON_PREFIX: &str = "asset:/@nsh-app-tidbi/icons/";
-const ICON_PLACEHOLDER: &str = "asset:/@nsh-app-tidbi/icons/IG_skill_empty_result.png";
+const ICON_PREFIX: &str = concat!("asset:/@", env!("CARGO_PKG_NAME"), "/icons/");
+const ICON_PLACEHOLDER: &str =
+    concat!("asset:/@", env!("CARGO_PKG_NAME"), "/icons/IG_skill_empty_result.png");
 
 /// Favorites are kept in a JSON file next to the app's data. NSH Storage
 /// needs the reactive runtime, which is unavailable at bundle startup and in

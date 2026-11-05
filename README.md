@@ -28,7 +28,7 @@ browser, built with **Rust + GPUI + TSX** through
 | `scripts/build_affix_i18n.py` | game translation tables → localized affixes and descriptions |
 | `scripts/build_set_names.py` | game translation tables → localized set names |
 | `data/*.json`, `data/names.json`, `data/i18n.json`, `data/affix_i18n.json`, `data/descriptions.json`, `data/set_names.json` | generated, embedded with `include_str!` |
-| `assets/icons/`, `pic/`, `base.mdb`, `TIDBI.exe` | original tool assets; the icons are the crate's NSH assets (`assets!()`), served at `asset:/@nsh-app-tidbi/icons/…` on every target |
+| `assets/icons/`, `pic/`, `base.mdb`, `TIDBI.exe` | original tool assets; the icons are the crate's NSH assets (`assets!()`), served at `asset:/@nsh-app-tl2-dex/icons/…` on every target |
 | `App.test.tsx` | headless UI tests |
 
 ## Data pipeline
@@ -141,8 +141,8 @@ stops at `unable to create target: 'No available targets are compatible with
 triple "wasm32-unknown-unknown"'`.
 
 Icons are compiled in as assets rather than read from disk at run time, so the
-web build shows them too: `nsh run` serves `asset:/@nsh-app-tidbi/icons/…` as
-`/assets/@nsh-app-tidbi/icons/…`, and `nsh package` copies the same files into
+web build shows them too: `nsh run` serves `asset:/@nsh-app-tl2-dex/icons/…` as
+`/assets/@nsh-app-tl2-dex/icons/…`, and `nsh package` copies the same files into
 the app's `nsh/assets/…`.
 
 ### Deploy (Cloudflare Workers)
@@ -172,8 +172,8 @@ names carry a content digest (`nsh.<digest>.wasm`, `app.<digest>.js`,
 `WebAssembly.compileStreaming` needs), the icons and the wasm as `immutable`,
 `index.html` as `must-revalidate`.
 
-Workers answers `/assets/@nsh-app-tidbi/…` with a 307 to the percent-encoded
-`/assets/%40nsh-app-tidbi/…`; the redirect also carries the `immutable` header
+Workers answers `/assets/@nsh-app-tl2-dex/…` with a 307 to the percent-encoded
+`/assets/%40nsh-app-tl2-dex/…`; the redirect also carries the `immutable` header
 and is cached, so it costs one extra request per icon on the first visit only.
 
 Pages instead of Workers: `npx wrangler pages deploy .nsh/out/tl2-dex`.
