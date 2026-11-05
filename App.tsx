@@ -439,7 +439,7 @@ function App() {
 
   const toggleFav = (c: string) => {
     const on = Db.toggleFavorite(c);
-    toast.set(on ? "Added to Favorites" : "Removed from Favorites");
+    toast.set(on ? t("ui.fav_added") : t("ui.fav_removed"));
     apply();
     const d = JSON.parse(Db.detail(shown() || c, lang())) as Detail | null;
     detail.set(d ?? EMPTY_DETAIL);
@@ -532,7 +532,7 @@ function App() {
       </Scroll>
       <View style={{ padding: 8, borderTopWidth: 1, borderTopColor: C.line }}>
         <Text style={{ color: C.faint, fontSize: 11 }}>
-          {OPT.counts.items} {t("ui.items")} · {OPT.counts.sets} {t("tree.sets")} · {OPT.counts.icons} icons
+          {OPT.counts.items} {t("ui.items")} · {OPT.counts.sets} {t("tree.sets")} · {OPT.counts.icons} {t("ui.icons")}
         </Text>
       </View>
     </View>
@@ -570,8 +570,8 @@ function App() {
         <Section title={t("ui.data")}>
           <Picker options={OPT.stats} value={statSel()} onPick={(v) => statSel.set(v)} render={(v) => t(`stat.${v}`)} />
           <View style={{ flexDirection: "row", gap: 5 }}>
-            <NumInput value={statMin()} onChange={(v) => statMin.set(v)} placeholder="min" />
-            <NumInput value={statMax()} onChange={(v) => statMax.set(v)} placeholder="max" />
+            <NumInput value={statMin()} onChange={(v) => statMin.set(v)} placeholder={t("ui.min")} />
+            <NumInput value={statMax()} onChange={(v) => statMax.set(v)} placeholder={t("ui.max")} />
             <Btn
               label="+"
               onPress={() =>
@@ -591,12 +591,12 @@ function App() {
           </If>
           <If when={reqSel() !== "Class"}>
             <View style={{ flexDirection: "row", gap: 5 }}>
-              <NumInput value={reqMin()} onChange={(v) => reqMin.set(v)} placeholder="min" />
-              <NumInput value={reqMax()} onChange={(v) => reqMax.set(v)} placeholder="max" />
+              <NumInput value={reqMin()} onChange={(v) => reqMin.set(v)} placeholder={t("ui.min")} />
+              <NumInput value={reqMax()} onChange={(v) => reqMax.set(v)} placeholder={t("ui.max")} />
             </View>
           </If>
           <Btn
-            label="+ Add"
+            label={t("ui.add")}
             onPress={() => {
               if (reqSel() === "Class") addFilter({ t: "class", v: classSel() }, `Class: ${classSel()}`);
               else
@@ -611,8 +611,8 @@ function App() {
         <Section title={t("ui.effects")}>
           {effectPicker()}
           <View style={{ flexDirection: "row", gap: 5 }}>
-            <NumInput value={effMin()} onChange={(v) => effMin.set(v)} placeholder="min" />
-            <NumInput value={effMax()} onChange={(v) => effMax.set(v)} placeholder="max" />
+            <NumInput value={effMin()} onChange={(v) => effMin.set(v)} placeholder={t("ui.min")} />
+            <NumInput value={effMax()} onChange={(v) => effMax.set(v)} placeholder={t("ui.max")} />
             <Btn
               label="+"
               onPress={() =>
@@ -626,10 +626,10 @@ function App() {
         </Section>
 
         <Section title={t("ui.options")}>
-          <Check label="Only Set Items" on={onlySets()} onPress={() => onlySets.set(!onlySets())} />
-          <Check label="Search in the selected node" on={inNode()} onPress={() => inNode.set(!inNode())} />
-          <Check label="Result of any option (OR)" on={orMode()} onPress={() => orMode.set(!orMode())} />
-          <Check label="Live search" on={live()} onPress={() => live.set(!live())} />
+          <Check label={t("ui.only_sets")} on={onlySets()} onPress={() => onlySets.set(!onlySets())} />
+          <Check label={t("ui.search_node")} on={inNode()} onPress={() => inNode.set(!inNode())} />
+          <Check label={t("ui.match_any")} on={orMode()} onPress={() => orMode.set(!orMode())} />
+          <Check label={t("ui.live_search")} on={live()} onPress={() => live.set(!live())} />
         </Section>
 
         <Section title={t("ui.sorting")}>
@@ -658,7 +658,7 @@ function App() {
             )}
           </Each>
           <If when={filters().length > 0}>
-            <Btn label="Clear list" onPress={() => filters.set([])} />
+            <Btn label={t("ui.clear_list")} onPress={() => filters.set([])} />
           </If>
         </Section>
       </View>
@@ -676,7 +676,7 @@ function App() {
           value={q()}
           onChange={({ value }) => q.set(value)}
           onSubmit={() => apply()}
-          placeholder="Search name (any language)…"
+          placeholder={t("ui.search_placeholder")}
           returnKeyType="search"
           style={{
             width: 280,
@@ -690,27 +690,27 @@ function App() {
             fontSize: 13,
           }}
         />
-        <Btn label="Search" onPress={() => apply()} />
+        <Btn label={t("ui.search")} onPress={() => apply()} />
         <View style={{ flex: 1 }} />
-        <Btn label={showText() ? "Show picture" : "Show text"} onPress={() => showText.set(!showText())} />
-        <Btn label="About" onPress={() => about.set(!about())} />
+        <Btn label={t(showText() ? "ui.show_picture" : "ui.show_text")} onPress={() => showText.set(!showText())} />
+        <Btn label={t("ui.about")} onPress={() => about.set(!about())} />
       </View>
 
       <View style={{ height: 32, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 10, backgroundColor: "#171b24", borderBottomWidth: 1, borderBottomColor: C.line }}>
-        <Text style={{ color: C.faint, fontSize: 11, fontWeight: "600" }}>Language:</Text>
+        <Text style={{ color: C.faint, fontSize: 11, fontWeight: "600" }}>{t("ui.language")}</Text>
         <Each of={OPT.languages}>
           {(l) => <Chip label={l().label} active={lang() === l().id} onPress={() => lang.set(l().id)} />}
         </Each>
         <View style={{ flex: 1 }} />
-        <Text style={{ color: C.faint, fontSize: 10 }}>names from MEDIA/TRANSLATIONS</Text>
+        <Text style={{ color: C.faint, fontSize: 10 }}>{t("ui.names_source")}</Text>
       </View>
 
       <View style={{ flex: 1, flexDirection: "row", minHeight: 0 }}>
         {/* left: tree / filter */}
         <View style={{ width: 252, backgroundColor: C.panel, borderRightWidth: 1, borderRightColor: C.line }}>
           <View style={{ flexDirection: "row", gap: 5, padding: 7 }}>
-            <Btn label="Item Tree" active={tab() === "tree"} onPress={() => tab.set("tree")} />
-            <Btn label="Filter" active={tab() === "filter"} onPress={() => tab.set("filter")} />
+            <Btn label={t("ui.item_tree")} active={tab() === "tree"} onPress={() => tab.set("tree")} />
+            <Btn label={t("ui.filter")} active={tab() === "filter"} onPress={() => tab.set("filter")} />
           </View>
           <If when={tab() === "tree"}>{treePanel()}</If>
           <If when={tab() === "filter"}>{filterPanel()}</If>
@@ -771,13 +771,13 @@ function App() {
         <View style={{ width: 344, backgroundColor: C.panel, borderLeftWidth: 1, borderLeftColor: C.line }}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, padding: 7, borderBottomWidth: 1, borderBottomColor: C.line }}>
             <Btn
-              label={locked() ? "Unlock" : "Lock"}
+              label={t(locked() ? "ui.unlock" : "ui.lock")}
               active={!!locked()}
               onPress={() => locked.set(locked() ? "" : shown())}
             />
-            <Btn label="Copy name" onPress={() => { Clipboard.writeText(detail()?.c ?? ""); toast.set("Console name copied"); }} />
+            <Btn label={t("ui.copy_name")} onPress={() => { Clipboard.writeText(detail()?.c ?? ""); toast.set(t("ui.console_copied")); }} />
             <Btn
-              label={detail()?.favorite ? "★ Unfav" : "☆ Fav"}
+              label={t(detail()?.favorite ? "ui.unfav" : "ui.fav")}
               onPress={() => toggleFav(detail()?.c ?? "")}
             />
           </View>
@@ -799,7 +799,7 @@ function App() {
 
                 <If when={!showText()}>
                   <View style={{ gap: 2 }}>
-                    <Labeled label={t("stat.Level")} value={`${detail().l} (min ${detail().lv})`} />
+                    <Labeled label={t("stat.Level")} value={`${detail().l} (${t("ui.min")} ${detail().lv})`} />
                     <Labeled label={t("stat.DPS")} value={String(Math.round(detail().dps))} color={C.dps} />
                     <Labeled label={t("label.speed")} value={String(detail().speed)} />
                     <Labeled label={t("label.rarity")} value={t(`rarity.${detail().rarity}`)} color={rarityColor(detail().rarity)} />
@@ -915,7 +915,7 @@ function App() {
             <Text style={{ color: C.muted, fontSize: 12 }}>Data: base.mdb exported with mdbtools; icons from ./icons</Text>
             <Text style={{ color: C.muted, fontSize: 12 }}>Right panel: Lock freezes the card for comparison. Favorites persist via NSH Storage.</Text>
             <View style={{ height: 8 }} />
-            <Btn label="OK" onPress={() => about.set(false)} />
+            <Btn label={t("ui.ok")} onPress={() => about.set(false)} />
           </View>
         </View>
       </If>

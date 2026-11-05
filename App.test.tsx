@@ -49,7 +49,7 @@ test("categories, rarity and stats follow the language", async () => {
   expect(texts).toContain("全部物品");
   expect(texts).toContain("武器");
   expect(texts).toContain("贵族");
-  await app.press("Filter");
+  await app.press("筛选");
   texts = app.texts();
   expect(texts).toContain("类型 / 稀有度");
   expect(texts).toContain("稀有");
@@ -59,6 +59,29 @@ test("categories, rarity and stats follow the language", async () => {
   // Affix chips follow the language too, not the English pattern label.
   expect(texts).toContain("闪避几率");
   expect(texts).not.toContain("Dodge chance");
+});
+
+test("toolbar and panel controls follow the language", async () => {
+  const app = await open("./App.tsx", { width: 1200, height: 900 });
+  await app.press("简体中文");
+  await app.wait(200);
+  let texts = app.texts();
+  expect(texts).toContain("搜索");
+  expect(texts).toContain("显示文本");
+  expect(texts).toContain("关于");
+  expect(texts).toContain("物品树");
+  expect(texts).toContain("筛选");
+  expect(texts).toContain("语言：");
+  await app.press("筛选");
+  texts = app.texts();
+  expect(texts).toContain("仅套装物品");
+  expect(texts).toContain("在选中节点中搜索");
+  expect(texts).toContain("任一条件匹配（或）");
+  expect(texts).toContain("实时搜索");
+  expect(texts).toContain("按类型");
+  await app.press("物品树");
+  await app.press("关于");
+  expect(app.texts()).toContain("确定");
 });
 
 test("tree categories collapse and expand from their arrows", async () => {

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Generate data/i18n.json: category, rarity and attribute labels for the UI.
+"""Generate data/i18n.json: category, rarity, attribute and control labels for the UI.
 
 Item names come from the game export (scripts/export_translations.py); this file
 covers the terms the original TIDBI UI keeps in code: tree categories, rarity,
-stats, requirements, elements, sort orders and card headings.
+stats, requirements, elements, sort orders, card headings and the labels of
+interface controls (buttons, placeholders, checkboxes and toasts).
 
 Keys map to the app's language ids: en, zh-Hans, zh-Hant, ru, de, ja, pl.
 English is the fallback for every missing translation.
@@ -144,6 +145,35 @@ TERMS: list[tuple[str, str, str, str, str, str, str, str]] = [
     ("ui.select_item", "Select an item", "选择一个物品", "選擇一個物品", "Выберите предмет", "Gegenstand wählen", "アイテムを選択", "Wybierz przedmiot"),
     ("ui.copy", "Copy", "复制", "複製", "Копировать", "Kopieren", "コピー", "Kopiuj"),
     ("ui.copied", "Copied", "已复制", "已複製", "Скопировано", "Kopiert", "コピーしました", "Skopiowano"),
+
+    # --- toolbar and panel buttons ---------------------------------------
+    ("ui.search", "Search", "搜索", "搜尋", "Поиск", "Suchen", "検索", "Szukaj"),
+    ("ui.search_placeholder", "Search name (any language)…", "搜索名称（任意语言）…", "搜尋名稱（任意語言）…", "Поиск по названию (любой язык)…", "Namen suchen (beliebige Sprache)…", "名前を検索（全言語）…", "Szukaj nazwy (dowolny język)…"),
+    ("ui.show_picture", "Show picture", "显示图片", "顯示圖片", "Показать изображение", "Bild anzeigen", "画像を表示", "Pokaż obraz"),
+    ("ui.show_text", "Show text", "显示文本", "顯示文字", "Показать текст", "Text anzeigen", "テキストを表示", "Pokaż tekst"),
+    ("ui.about", "About", "关于", "關於", "О программе", "Über", "情報", "O programie"),
+    ("ui.ok", "OK", "确定", "確定", "ОК", "OK", "OK", "OK"),
+    ("ui.language", "Language:", "语言：", "語言：", "Язык:", "Sprache:", "言語:", "Język:"),
+    ("ui.names_source", "names from MEDIA/TRANSLATIONS", "名称来自 MEDIA/TRANSLATIONS", "名稱來自 MEDIA/TRANSLATIONS", "названия из MEDIA/TRANSLATIONS", "Namen aus MEDIA/TRANSLATIONS", "名前の出典: MEDIA/TRANSLATIONS", "nazwy z MEDIA/TRANSLATIONS"),
+    ("ui.item_tree", "Item Tree", "物品树", "物品樹", "Дерево предметов", "Gegenstandsbaum", "アイテムツリー", "Drzewo przedmiotów"),
+    ("ui.filter", "Filter", "筛选", "篩選", "Фильтр", "Filter", "フィルター", "Filtr"),
+    ("ui.add", "+ Add", "+ 添加", "+ 新增", "+ Добавить", "+ Hinzufügen", "+ 追加", "+ Dodaj"),
+    ("ui.only_sets", "Only Set Items", "仅套装物品", "僅套裝物品", "Только комплекты", "Nur Set-Gegenstände", "セット品のみ", "Tylko przedmioty z zestawów"),
+    ("ui.search_node", "Search in the selected node", "在选中节点中搜索", "在選取節點中搜尋", "Искать в выбранном узле", "Im ausgewählten Knoten suchen", "選択ノード内を検索", "Szukaj w wybranym węźle"),
+    ("ui.match_any", "Result of any option (OR)", "任一条件匹配（或）", "任一條件符合（或）", "Любое условие (ИЛИ)", "Beliebiges Kriterium (ODER)", "いずれかに一致（OR）", "Dowolny warunek (OR)"),
+    ("ui.live_search", "Live search", "实时搜索", "即時搜尋", "Живой поиск", "Live-Suche", "ライブ検索", "Szukaj na żywo"),
+    ("ui.clear_list", "Clear list", "清空列表", "清空列表", "Очистить список", "Liste leeren", "リストを消去", "Wyczyść listę"),
+    ("ui.lock", "Lock", "锁定", "鎖定", "Заблокировать", "Sperren", "ロック", "Zablokuj"),
+    ("ui.unlock", "Unlock", "解锁", "解鎖", "Разблокировать", "Entsperren", "ロック解除", "Odblokuj"),
+    ("ui.copy_name", "Copy name", "复制名称", "複製名稱", "Копировать название", "Namen kopieren", "名前をコピー", "Kopiuj nazwę"),
+    ("ui.fav", "☆ Fav", "☆ 收藏", "☆ 收藏", "☆ В избранное", "☆ Favorit", "☆ お気に入り", "☆ Ulubione"),
+    ("ui.unfav", "★ Unfav", "★ 取消收藏", "★ 取消收藏", "★ Убрать", "★ Entfernen", "★ 解除", "★ Usuń"),
+    ("ui.min", "min", "最小", "最小", "мин.", "Min.", "最小", "min."),
+    ("ui.max", "max", "最大", "最大", "макс.", "Max.", "最大", "maks."),
+    ("ui.icons", "icons", "个图标", "個圖示", "иконок", "Symbole", "アイコン", "ikon"),
+    ("ui.fav_added", "Added to Favorites", "已加入收藏", "已加入收藏", "Добавлено в избранное", "Zu Favoriten hinzugefügt", "お気に入りに追加しました", "Dodano do ulubionych"),
+    ("ui.fav_removed", "Removed from Favorites", "已移出收藏", "已移出收藏", "Удалено из избранного", "Aus Favoriten entfernt", "お気に入りから削除しました", "Usunięto z ulubionych"),
+    ("ui.console_copied", "Console name copied", "已复制内部名", "已複製內部名", "Имя консоли скопировано", "Konsolenname kopiert", "コンソール名をコピーしました", "Skopiowano nazwę konsoli"),
 
     # --- unit types not in the tree --------------------------------------
     ("unit.dynamite", "Dynamite", "炸药", "炸藥", "Динамит", "Dynamit", "ダイナマイト", "Dynamit"),

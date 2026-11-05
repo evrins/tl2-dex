@@ -61,9 +61,9 @@ Languages: `en`, `ru`, `zh-Hans` (MANDARIN), `zh-Hant` (TAIWANESE), `de`, `ja`,
 `pl`. 6185 console names match (6037 of the 6050 items in `base.mdb`); missing
 names fall back to English and then to the original database columns.
 
-Category, rarity, stat, requirement, element and affix-chip labels are
-maintained in `scripts/build_i18n.py` (221 keys, same seven languages) and
-written to `data/i18n.json`:
+Category, rarity, stat, requirement, element, affix-chip and interface-control
+labels are maintained in `scripts/build_i18n.py` (248 keys, same seven
+languages) and written to `data/i18n.json`:
 
 ```bash
 python3 scripts/build_i18n.py   # rewrites data/i18n.json
