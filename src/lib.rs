@@ -449,10 +449,12 @@ impl Core {
             .map(str::to_string)
     }
 
-    /// Free-text search over every exported language, plus the two columns
-    /// the original tool searched.
+    /// Free-text search over every exported language, the item's internal id
+    /// (`ConsolNAME`, the game's console name) and the two columns the
+    /// original tool searched.
     fn item_matches(&self, it: &Item, q: &str) -> bool {
-        if it.s("DISPLAYNAME").to_lowercase().contains(q)
+        if it.s("ConsolNAME").to_lowercase().contains(q)
+            || it.s("DISPLAYNAME").to_lowercase().contains(q)
             || it.s("iTRANSLATION").to_lowercase().contains(q)
         {
             return true;
@@ -775,14 +777,19 @@ impl Db {
     }
 
     /// The `asset:/` URI of `icons/<name>.png`, or the original tool's
-    /// placeholder when the database names an icon the assets do not ship
-    /// (66 names have no file in the 2014 tool either).
+    /// placeholder when the database names an icon the assets do not ship.
+    ///
+    /// The database stores `ICON` in lowercase (`icons_gem_06b`) while the
+    /// 2014 asset files are mixed case (`icons_gem_06B.png`). The original
+    /// app read them through Windows' case-insensitive file system; asset
+    /// URIs are matched exactly, so compare case-insensitively and return the
+    /// asset's own spelling.
     pub fn icon(name: String) -> String {
         let wanted = format!("{ICON_PREFIX}{name}.png");
         assets!()
             .iter()
             .map(|file| file.uri)
-            .find(|uri| *uri == wanted)
+            .find(|uri| uri.eq_ignore_ascii_case(&wanted))
             .unwrap_or(ICON_PLACEHOLDER)
             .to_owned()
     }
@@ -930,5 +937,66 @@ mod tests {
         assert!(rarity_is("Rare Ring", "Rare"));
         assert!(rarity_is("Quest items", "Quest item"));
         assert!(!rarity_is("Rare Ring", "Common"));
+    }
+
+    #[test]
+    fn search_matches_the_internal_id() {
+        // `ConsolNAME` is the game's internal definition name; make it
+        // searchable case-insensitively, like the localized display names.
+        let by_id: Value = serde_json::from_str(&Db::query(
+            json!({ "node": "all", "q": "CROSSBOW_M01", "filters": [], "lang": "en" }).to_string(),
+        ))
+        .unwrap();
+        let rows = by_id["rows"].as_array().unwrap();
+        assert!(
+            rows.iter().any(|r| r[0].as_str() == Some("crossbow_m01")),
+            "searching the internal id should return crossbow_m01"
+        );
+
+        // Display-name search still works, and an unknown internal id matches
+        // nothing.
+        let by_name: Value = serde_json::from_str(&Db::query(
+            json!({ "node": "all", "q": "Peasant Crossbow", "filters": [], "lang": "en" }).to_string(),
+        ))
+        .unwrap();
+        assert!(by_name["rows"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|r| r[0].as_str() == Some("crossbow_m01")));
+
+        let missing: Value = serde_json::from_str(&Db::query(
+            json!({ "node": "all", "q": "no_such_internal_id_zz", "filters": [], "lang": "en" }).to_string(),
+        ))
+        .unwrap();
+        assert_eq!(missing["total"].as_u64().unwrap(), 0);
+    }
+
+    #[test]
+    fn icon_lookup_ignores_case() {
+        // `items.ICON` is lowercase; the 2014 asset files are mixed case.
+        // Both spellings must resolve to the asset's own filename.
+        assert_eq!(
+            Db::icon("icons_gem_06b".into()),
+            "asset:/@nsh-app-tl2-dex/icons/icons_gem_06B.png"
+        );
+        assert_eq!(
+            Db::icon("icons_oddgem_b".into()),
+            "asset:/@nsh-app-tl2-dex/icons/icons_oddgem_B.png"
+        );
+        assert_eq!(
+            Db::icon("icons_gem_06B".into()),
+            "asset:/@nsh-app-tl2-dex/icons/icons_gem_06B.png"
+        );
+        // Cropped from the game's SKILLS3.DDS atlas, region named by the
+        // item definition; it had no PNG in the 2014 tool's icon folder.
+        assert_eq!(
+            Db::icon("skillicon_ember_hammer_gray".into()),
+            "asset:/@nsh-app-tl2-dex/icons/skillicon_ember_hammer_gray.png"
+        );
+        assert_eq!(
+            Db::icon("amulet3".into()),
+            "asset:/@nsh-app-tl2-dex/icons/IG_skill_empty_result.png"
+        );
     }
 }

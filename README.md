@@ -149,7 +149,7 @@ the app's `nsh/assets/…`.
 
 `nsh package --target web` writes a static site — `index.html`,
 `nsh.<digest>.wasm` (13.6 MB), `app.<digest>.js`, `assets/…` — into
-`.nsh/out/tl2-dex`, 1139 files. `wrangler.jsonc` uploads that directory as a
+`.nsh/out/tl2-dex`, 1144 files. `wrangler.jsonc` uploads that directory as a
 static-only Worker: it declares no `main`, so every request is an asset and
 none is billed as a Worker invocation.
 
@@ -188,8 +188,9 @@ Pages instead of Workers: `npx wrangler pages deploy .nsh/out/tl2-dex`.
   descriptions, random enchantments, set bonuses, set names, search and the card follow it
   (search covers every language at once); the card lists all seven exported
   names.
-- Search over every exported language plus `DISPLAYNAME` / `iTRANSLATION`;
-  optional "in selected node" restriction.
+- Search over every exported language, the item's internal id (`ConsolNAME`,
+  the console name) and `DISPLAYNAME` / `iTRANSLATION`; optional "in selected
+  node" restriction.
 - Filter builder: rarity chips that apply on click (multiple rarities are
   OR-ed), stat ranges (Level/DPS/damage/armor/block),
   requirements (level/STR/DEX/Focus/Vitality/class), ~100 affix chips (localized
@@ -202,7 +203,10 @@ Pages instead of Workers: `npx wrangler pages deploy .nsh/out/tl2-dex`.
 - Favorites persist to `~/Library/Application Support/com.mytorchlight.tidbi/favorites.json`
   (Windows: `%APPDATA%`); copy the console name from its field or the
   toolbar button; lock the card for comparison; about box.
-- 66 icon names in the original data have no file in `assets/icons/`; they fall
+- Icon names are matched case-insensitively: the database stores lowercase
+  names (`icons_gem_06b`) while the 2014 asset files are mixed case
+  (`icons_gem_06B.png`), which Windows resolved for the original tool.
+- 18 icon names (20 items) have no file in `assets/icons/` at all; they fall
   back to `IG_skill_empty_result.png`, the same placeholder the original used.
 
 ## Differences from the original
