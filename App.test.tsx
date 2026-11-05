@@ -23,6 +23,22 @@ test("tree nodes and the filter tab drive the query", async () => {
   expect(texts).toContain("Type / Rarity");
   expect(texts).toContain("Only Set Items");
   expect(texts).toContain("Live search");
+  expect(texts).toContain("Dodge chance");
+});
+
+test("rarity chips apply as soon as they are picked", async () => {
+  const app = await open("./App.tsx");
+  await app.press("Filter");
+  await app.press("Rare");
+  await app.wait(200);
+  const texts = app.texts();
+  expect(texts).toContain("1 filters");
+  expect(texts).not.toContain("Clear list");
+  expect(texts.join("\n")).toMatch(/\b[1-9]\d* \/ 6050 items/);
+  await app.press("Rare");
+  await app.wait(200);
+  expect(app.texts()).toContain("0 filters");
+  expect(app.texts()).toContain("6050 / 6050 items");
 });
 
 test("categories, rarity and stats follow the language", async () => {
@@ -40,6 +56,9 @@ test("categories, rarity and stats follow the language", async () => {
   expect(texts).toContain("等级");
   expect(texts).toContain("物理伤害");
   expect(texts).toContain("敏捷");
+  // Affix chips follow the language too, not the English pattern label.
+  expect(texts).toContain("闪避几率");
+  expect(texts).not.toContain("Dodge chance");
 });
 
 test("tree categories collapse and expand from their arrows", async () => {

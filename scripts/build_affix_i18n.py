@@ -66,11 +66,24 @@ _PAIRS: tuple[re.Pattern[str], list[tuple[str, int]], str] | None = None
 def clean(text: str) -> str:
     text = re.sub(r"\|c[0-9A-Fa-f]{8}", "", text)
     text = text.replace("|u", "")
+    # TRANSLATION.DAT stores line breaks as the two-character escape `\n`;
+    # the TIDBI database stores the same text with real spaces (or none).
+    text = text.replace("\\n", "\n")
     return re.sub(r"\s+", " ", text).strip()
 
 
 def normalize(text: str) -> str:
     return clean(text).replace("`", "'").replace("\u2019", "'").replace("\u2018", "'")
+
+
+def description_key(text: str) -> str:
+    """Punctuation- and whitespace-insensitive key for free-text descriptions.
+
+    The database and the game tables differ in incidental punctuation
+    (` - ` vs `: `, a missing colon or space); for whole sentences that is not
+    meaningful, so descriptions fall back to a letters-and-digits comparison.
+    """
+    return re.sub(r"[^0-9a-z]+", "", normalize(text).lower())
 
 
 def parse_table(path: Path) -> dict[str, str]:
@@ -160,6 +173,23 @@ def render(template: str, captures: list[tuple[str, str]], lang: str, table: dic
     return "".join(out)
 
 
+def description_index(table: dict[str, str]) -> dict[str, str]:
+    """`description_key` -> translation, dropping keys with conflicting text."""
+    index: dict[str, str] = {}
+    conflicts: set[str] = set()
+    for original, translated in table.items():
+        key = description_key(original)
+        if not key:
+            continue
+        if key in index and index[key] != translated:
+            conflicts.add(key)
+        else:
+            index.setdefault(key, translated)
+    for key in conflicts:
+        del index[key]
+    return index
+
+
 def translate(text: str, tables: dict[str, dict[str, str]], tmpls, ui: dict) -> dict[str, str]:
     prefix, template, captures = resolve(text, tables["EXACT"], tmpls)
     if template is None:
@@ -231,16 +261,20 @@ def main() -> None:
         if row.get("DESCRIPTION") and row["DESCRIPTION"].strip()
     }
     desc_out: dict[str, dict[str, str]] = {}
+    desc_index = {
+        lang: description_index(table)
+        for lang, table in tables.items()
+        if lang != "EXACT"
+    }
     for text in sorted(desc_texts):
-        normalized = normalize(text)
-        if normalized in tables["EXACT"]:
-            entry = {}
-            for lang in LANGS.values():
-                translated = tables[lang].get(normalize(text))
-                if translated and (not entry.get(lang)):
-                    entry[lang] = clean(translated)
-            if entry:
-                desc_out[text] = entry
+        key = description_key(text)
+        entry = {}
+        for lang in LANGS.values():
+            translated = tables[lang].get(normalize(text)) or desc_index[lang].get(key)
+            if translated:
+                entry[lang] = clean(translated)
+        if entry:
+            desc_out[text] = entry
 
     for name, value in (("affix_i18n.json", affix_out), ("descriptions.json", desc_out)):
         path = DATA / name

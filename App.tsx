@@ -366,15 +366,18 @@ function App() {
   };
   const filterLabel = (f: Filter): string => {
     const range = `${f.min ?? "…"}–${f.max ?? "…"}`;
-    if (f.t === "rarity") return t(`rarity.${f.v ?? ""}`);
     if (f.t === "class") return `${t("req.Class")}: ${t(`tree.cls_${(f.v ?? "").toLowerCase()}`)}`;
     if (f.t === "stat") return `${t(`stat.${f.f ?? ""}`)} ${range}`;
     if (f.t === "req") return `${t(`req.${f.f ?? ""}`)} ${range}`;
+    if (f.t === "effect") {
+      const e = OPT.effects.find((x) => x.pattern === f.p);
+      return `${e ? t(`effect.${e.label}`) : f.label} ${range}`;
+    }
     return `${f.label} ${range}`;
   };
 
   // Filter form state
-  const raritySel = signal("Rare");
+  const raritySel = signal<string[]>([]);
   const statSel = signal("DPS");
   const statMin = signal("");
   const statMax = signal("");
@@ -390,10 +393,16 @@ function App() {
     filters.set([...filters(), { ...f, id: nextFilterId++, label }]);
   };
 
+  const toggleRarity = (v: string) => {
+    const cur = raritySel();
+    raritySel.set(cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]);
+  };
+
   const spec = () => ({
     node: node(),
     q: q(),
     filters: filters().map(({ t, v, f, p, min, max }) => ({ t, v, f, p, min, max })),
+    rarities: raritySel(),
     or: orMode(),
     onlySets: onlySets(),
     inNode: inNode(),
@@ -466,7 +475,7 @@ function App() {
       for (const e of d.effects) lines.push(`  ${e}`);
     }
     if (d.setBonuses.length) {
-      lines.push("", `${t("label.setbonuses")}:`);
+      lines.push("", d.sets ? `${t("label.setbonuses")} · ${setLabel(d.sets)}:` : `${t("label.setbonuses")}:`);
       for (const b of d.setBonuses) lines.push(`  (${b.count}) ${b.text}`);
     }
     if (Object.keys(d.names).length > 1) {
@@ -534,7 +543,7 @@ function App() {
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, padding: 5 }}>
         <Each of={OPT.effects}>
           {(e) => (
-            <Chip label={e().label} active={effectSel() === e().pattern} onPress={() => effectSel.set(e().pattern)} />
+            <Chip label={t(`effect.${e().label}`)} active={effectSel() === e().pattern} onPress={() => effectSel.set(e().pattern)} />
           )}
         </Each>
       </View>
@@ -545,11 +554,17 @@ function App() {
     <Scroll style={{ flex: 1 }}>
       <View style={{ padding: 9, gap: 10 }}>
         <Section title={t("ui.type_rarity")}>
-          <Picker options={OPT.rarities} value={raritySel()} onPick={(v) => raritySel.set(v)} render={(v) => t(`rarity.${v}`)} />
-          <Btn
-            label="+ Add"
-            onPress={() => addFilter({ t: "rarity", v: raritySel() }, raritySel())}
-          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4 }}>
+            <Each of={OPT.rarities}>
+              {(r) => (
+                <Chip
+                  label={t(`rarity.${r()}`)}
+                  active={raritySel().includes(r())}
+                  onPress={() => toggleRarity(r())}
+                />
+              )}
+            </Each>
+          </View>
         </Section>
 
         <Section title={t("ui.data")}>
@@ -834,7 +849,12 @@ function App() {
                     </If>
 
                     <If when={detail().setBonuses.length > 0}>
-                      <Text style={{ color: C.gold, fontSize: 12, fontWeight: "700", paddingTop: 6 }}>{t("label.setbonuses")}</Text>
+                      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6, paddingTop: 6 }}>
+                        <Text style={{ color: C.gold, fontSize: 12, fontWeight: "700" }}>{t("label.setbonuses")}</Text>
+                        <If when={!!detail().sets}>
+                          <Text style={{ color: "#d7b4f5", fontSize: 12 }}>{setLabel(detail().sets)}</Text>
+                        </If>
+                      </View>
                       <Each of={detail().setBonuses}>
                         {(b) => <Text style={{ color: "#d7b4f5", fontSize: 12, paddingLeft: 8 }}>{`(${b().count}) ${b().text}`}</Text>}
                       </Each>
@@ -881,7 +901,7 @@ function App() {
         </Text>
         <Text style={{ color: C.muted, fontSize: 11 }}>{total()} / {OPT.counts.items} {t("ui.items")}</Text>
         <Text style={{ color: C.faint, fontSize: 11 }}>{rows().length} {t("ui.shown")}</Text>
-        <Text style={{ color: C.muted, fontSize: 11 }}>{filters().length} {t("ui.filters")}</Text>
+        <Text style={{ color: C.muted, fontSize: 11 }}>{filters().length + raritySel().length} {t("ui.filters")}</Text>
         <View style={{ flex: 1 }} />
         <Text style={{ color: C.gold, fontSize: 11 }}>{toast()}</Text>
       </View>

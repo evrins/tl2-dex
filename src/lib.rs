@@ -367,6 +367,17 @@ fn rarity_group(u: &str) -> &'static str {
     }
 }
 
+/// Whether `u` belongs to the rarity option `want` (`Quest item` is the
+/// option label for the `Quest` group).
+fn rarity_is(u: &str, want: &str) -> bool {
+    let group = rarity_group(u);
+    if group == "Quest" {
+        want == "Quest item"
+    } else {
+        group == want
+    }
+}
+
 fn between(v: f64, lo: Option<f64>, hi: Option<f64>) -> bool {
     lo.map_or(true, |x| v >= x) && hi.map_or(true, |x| v <= x)
 }
@@ -485,20 +496,6 @@ impl Core {
         let hi = c.get("max").and_then(Value::as_f64);
         let v = c.get("v").and_then(Value::as_str).unwrap_or("");
         match kind {
-            "rarity" => match v {
-                "Common" => {
-                    let u = it.s("UNITTYPE").to_lowercase();
-                    !u.contains("rare")
-                        && !u.contains("unique")
-                        && !u.contains("legendary")
-                        && !u.contains("item")
-                }
-                "Quest item" => it.s("UNITTYPE").to_lowercase().contains("item"),
-                other => it
-                    .s("UNITTYPE")
-                    .to_lowercase()
-                    .contains(&other.to_lowercase()),
-            },
             "class" => it.s("REQ_CLASS").eq_ignore_ascii_case(v),
             "stat" => {
                 let field = c.get("f").and_then(Value::as_str).unwrap_or("");
@@ -595,7 +592,8 @@ impl Db {
         .to_string()
     }
 
-    /// Run a search. `spec` is JSON: node, q, filters[], or, onlySets, inNode, sort.
+    /// Run a search. `spec` is JSON: node, q, filters[], rarities[], or,
+    /// onlySets, inNode, sort.
     pub fn query(spec: String) -> String {
         let d = db();
         let s: Value = serde_json::from_str(&spec).unwrap_or(Value::Null);
@@ -608,6 +606,7 @@ impl Db {
             .to_lowercase();
         let empty = Vec::new();
         let filters = s.get("filters").and_then(Value::as_array).unwrap_or(&empty);
+        let rarities = s.get("rarities").and_then(Value::as_array).unwrap_or(&empty);
         let or_mode = s.get("or").and_then(Value::as_bool).unwrap_or(false);
         let only_sets = s.get("onlySets").and_then(Value::as_bool).unwrap_or(false);
         let in_node = s.get("inNode").and_then(Value::as_bool).unwrap_or(false);
@@ -629,13 +628,20 @@ impl Db {
                 if !q.is_empty() && !d.item_matches(it, &q) {
                     return false;
                 }
-                if filters.is_empty() {
+                if filters.is_empty() && rarities.is_empty() {
                     return true;
                 }
+                let has_rarity = !rarities.is_empty();
+                // Multiple ticked rarities are alternatives within one clause.
+                let rarity_ok = !has_rarity
+                    || rarities.iter().any(|r| {
+                        r.as_str()
+                            .is_some_and(|v| rarity_is(it.s("UNITTYPE"), v))
+                    });
                 if or_mode {
-                    filters.iter().any(|c| d.condition(c, it))
+                    (has_rarity && rarity_ok) || filters.iter().any(|c| d.condition(c, it))
                 } else {
-                    filters.iter().all(|c| d.condition(c, it))
+                    rarity_ok && filters.iter().all(|c| d.condition(c, it))
                 }
             })
             .collect();
@@ -864,6 +870,12 @@ mod tests {
         let detail: Value =
             serde_json::from_str(&Db::detail("crossbow_u01".into(), "zh-Hans".into())).unwrap();
         assert_eq!(detail["description"].as_str(), Some("给它上好发条让它飞吧。"));
+        let axe: Value =
+            serde_json::from_str(&Db::detail("legendary_axe03".into(), "zh-Hans".into())).unwrap();
+        assert_eq!(
+            axe["description"].as_str(),
+            Some("传奇斧藏品系列 四件中的第三件")
+        );
         assert!(detail["effects"]
             .as_array()
             .unwrap()
@@ -898,7 +910,8 @@ mod tests {
             json!({
                 "node": "bows",
                 "q": "",
-                "filters": [{"t": "rarity", "v": "Rare"}],
+                "filters": [],
+                "rarities": ["Rare", "Unique"],
                 "or": false,
                 "onlySets": false,
                 "inNode": false,
@@ -909,5 +922,12 @@ mod tests {
         .unwrap();
         let total = result["total"].as_u64().unwrap();
         assert!(total > 0 && total < 6050, "total={total}");
+        for row in result["rows"].as_array().unwrap() {
+            let rarity = row[8].as_str().unwrap();
+            assert!(rarity == "Rare" || rarity == "Unique", "{rarity}");
+        }
+        assert!(rarity_is("Rare Ring", "Rare"));
+        assert!(rarity_is("Quest items", "Quest item"));
+        assert!(!rarity_is("Rare Ring", "Common"));
     }
 }

@@ -61,9 +61,9 @@ Languages: `en`, `ru`, `zh-Hans` (MANDARIN), `zh-Hant` (TAIWANESE), `de`, `ja`,
 `pl`. 6185 console names match (6037 of the 6050 items in `base.mdb`); missing
 names fall back to English and then to the original database columns.
 
-Category, rarity, stat, requirement and element labels are maintained in
-`scripts/build_i18n.py` (117 keys, same seven languages) and written to
-`data/i18n.json`:
+Category, rarity, stat, requirement, element and affix-chip labels are
+maintained in `scripts/build_i18n.py` (221 keys, same seven languages) and
+written to `data/i18n.json`:
 
 ```bash
 python3 scripts/build_i18n.py   # rewrites data/i18n.json
@@ -190,9 +190,11 @@ Pages instead of Workers: `npx wrangler pages deploy .nsh/out/tl2-dex`.
   names.
 - Search over every exported language plus `DISPLAYNAME` / `iTRANSLATION`;
   optional "in selected node" restriction.
-- Filter builder: rarity, stat ranges (Level/DPS/damage/armor/block),
-  requirements (level/STR/DEX/Focus/Vitality/class), ~100 effect patterns with
-  numeric ranges, "Only Set Items", AND/OR, live search, sort by type/level/DPS.
+- Filter builder: rarity chips that apply on click (multiple rarities are
+  OR-ed), stat ranges (Level/DPS/damage/armor/block),
+  requirements (level/STR/DEX/Focus/Vitality/class), ~100 affix chips (localized
+  names) with numeric ranges, "Only Set Items", AND/OR, live search, sort by
+  type/level/DPS.
 - Virtualized result grid with icons, rarity colors and favorite stars.
 - Item card: localized name (plus English), type, level, DPS, damage/armor per
   element, requirements, sockets, random enchantments, set bonuses, all language
