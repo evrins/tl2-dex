@@ -1,0 +1,247 @@
+name: Build and release
+
+# Every run builds the app for all five desktop targets; pushing a
+# `v<version>` tag also publishes the packages to a GitHub release, under the
+# tag's version (`workflow_dispatch` uses nsh.json's). `nsh package` for this
+# app (nsh.json "rust": ".") builds a runner with the app's Rust crate
+# through Cargo, so each job needs
+# its target's Rust toolchain and native libraries; the runner is built for
+# the machine it runs on, which is why every architecture gets a runner of its own.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # The NSH CLI the app is built with; Cargo.toml depends on the same release.
+  NSH_VERSION: v0.4.0
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  meta:
+    name: Version
+    runs-on: ubuntu-24.04
+    outputs:
+      name: ${{ steps.read.outputs.name }}
+      version: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read nsh.json
+        id: read
+        run: |
+          name=$(jq -r .name nsh.json)
+          config_version=$(jq -r .version nsh.json)
+          # A `v<version>` tag names the release; a manual run takes nsh.json's.
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+            if [ "$version" != "$config_version" ]; then
+              echo "::warning::tag $GITHUB_REF_NAME names this release $version, while nsh.json says $config_version"
+            fi
+          else
+            version="$config_version"
+          fi
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "building $name $version"
+
+  build:
+    name: ${{ matrix.target }} ${{ matrix.arch }}
+    needs: meta
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS: arm64 from the prebuilt nsh; Intel Macs have no prebuilt
+          # nsh, so that job builds the CLI from the release tag. GitHub
+          # retires the Intel macOS runners with macOS 15 (Fall 2027).
+          - runner: macos-15
+            target: macos
+            arch: arm64
+            nsh: prebuilt
+          - runner: macos-15-intel
+            target: macos
+            arch: x64
+            nsh: source
+          - runner: windows-2025
+            target: windows
+            arch: x64
+            nsh: prebuilt
+          # Linux amd64 from the prebuilt nsh (it needs GTK 4.14: Ubuntu
+          # 24.04+); no arm64 nsh is published, so that job builds it.
+          - runner: ubuntu-24.04
+            target: linux
+            arch: amd64
+            nsh: prebuilt
+          - runner: ubuntu-24.04-arm
+            target: linux
+            arch: arm64
+            nsh: source
+    runs-on: ${{ matrix.runner }}
+    env:
+      NAME: ${{ needs.meta.outputs.name }}
+      VERSION: ${{ needs.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # The source-built CLI is a Cargo checkout of its own: cache both
+      # target directories, the app's and the CLI's.
+      - name: Check out the NSH release tag
+        if: matrix.nsh == 'source'
+        run: |
+          git clone --depth 1 --branch "$NSH_VERSION" \
+            https://github.com/longbridge/nsh.git "$RUNNER_TEMP/nsh-src"
+
+      - name: Cache Cargo
+        if: matrix.nsh == 'prebuilt'
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}-${{ matrix.arch }}
+
+      - name: Cache Cargo
+        if: matrix.nsh == 'source'
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}-${{ matrix.arch }}-source
+          workspaces: |
+            . -> target
+            ${{ runner.temp }}/nsh-src -> target
+
+      - name: Install GTK 4, WebKitGTK 6.0 and clang
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-4-dev libwebkitgtk-6.0-dev clang libclang-dev
+
+      # QuickJS' bindings are generated with libclang; the image installs LLVM
+      # outside clang's default search path.
+      - name: Point bindgen at LLVM
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          if (Test-Path 'C:\Program Files\LLVM\bin') {
+            Add-Content -Path $env:GITHUB_ENV -Value 'LIBCLANG_PATH=C:\Program Files\LLVM\bin'
+          }
+
+      - name: Install nsh (prebuilt, macOS and Linux)
+        if: matrix.nsh == 'prebuilt' && runner.os != 'Windows'
+        run: |
+          export NSH_INSTALL_DIR="$RUNNER_TEMP/nsh"
+          # NSH_VERSION picks the release; its own installer is pinned with it.
+          curl -fsSL "https://github.com/longbridge/nsh/releases/download/$NSH_VERSION/install.sh" | sh
+          echo "$NSH_INSTALL_DIR/bin" >> "$GITHUB_PATH"
+
+      - name: Install nsh (prebuilt, Windows)
+        if: matrix.nsh == 'prebuilt' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:NSH_INSTALL_DIR = Join-Path $env:RUNNER_TEMP 'nsh'
+          irm "https://github.com/longbridge/nsh/releases/download/$env:NSH_VERSION/install.ps1" | iex
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $env:NSH_INSTALL_DIR 'bin')
+
+      - name: Build nsh from source
+        if: matrix.nsh == 'source'
+        env:
+          # The checkout's rust-toolchain.toml lists Apple and Android std
+          # targets this build has no use for.
+          RUSTUP_TOOLCHAIN: stable
+        run: |
+          cargo build --release --locked \
+            --manifest-path "$RUNNER_TEMP/nsh-src/Cargo.toml" -p nsh-cli
+          echo "$RUNNER_TEMP/nsh-src/target/release" >> "$GITHUB_PATH"
+
+      - name: Check the nsh CLI
+        run: nsh --version
+
+      - name: Package
+        run: |
+          nsh package --target "${{ matrix.target }}" \
+            --app-version "$VERSION" --out build/out
+
+      - name: Archive (macOS)
+        if: matrix.target == 'macos'
+        run: |
+          mkdir -p dist
+          ditto -c -k --keepParent "build/out/$NAME.app" \
+            "dist/$NAME-$VERSION-macos-${{ matrix.arch }}.zip"
+
+      - name: Archive (Windows)
+        if: matrix.target == 'windows'
+        run: |
+          mkdir -p dist
+          cp "build/out/$NAME.zip" "dist/$NAME-$VERSION-windows-${{ matrix.arch }}.zip"
+
+      - name: Archive (Linux)
+        if: matrix.target == 'linux'
+        run: |
+          mkdir -p dist
+          cp "build/out/$NAME.tar.gz" "dist/$NAME-$VERSION-linux-${{ matrix.arch }}.tar.gz"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.target }}-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [meta, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      NAME: ${{ needs.meta.outputs.name }}
+      VERSION: ${{ needs.meta.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Write the release notes
+        run: |
+          cat > notes.md <<EOF
+          Native builds of $NAME $VERSION.
+
+          | Asset | Platform |
+          | --- | --- |
+          | \`$NAME-$VERSION-macos-arm64.zip\` | macOS 14+ on Apple silicon |
+          | \`$NAME-$VERSION-macos-x64.zip\` | macOS 14+ on Intel |
+          | \`$NAME-$VERSION-windows-x64.zip\` | Windows 10 1809+ / 11 |
+          | \`$NAME-$VERSION-linux-amd64.tar.gz\` | Linux x86_64 |
+          | \`$NAME-$VERSION-linux-arm64.tar.gz\` | Linux arm64 |
+
+          The macOS apps are signed ad hoc, not notarized: after unzipping, run
+          \`xattr -dr com.apple.quarantine $NAME.app\` before opening it.
+
+          The Linux builds need GTK 4.14 or newer and WebKitGTK 6.0
+          (\`libwebkitgtk-6.0-4\`) installed. The Windows and Linux builds run
+          from their unpacked folder; nothing is installed.
+          EOF
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -l dist
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* \
+              --title "$NAME $VERSION" --notes-file notes.md --verify-tag
+          fi
