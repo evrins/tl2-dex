@@ -167,12 +167,14 @@ jobs:
         run: nsh --version
 
       - name: Package
+        shell: bash
         run: |
           nsh package --target "${{ matrix.target }}" \
             --app-version "$VERSION" --out build/out
 
       - name: Archive (macOS)
         if: matrix.target == 'macos'
+        shell: bash
         run: |
           mkdir -p dist
           ditto -c -k --keepParent "build/out/$NAME.app" \
@@ -180,12 +182,14 @@ jobs:
 
       - name: Archive (Windows)
         if: matrix.target == 'windows'
+        shell: bash
         run: |
           mkdir -p dist
           cp "build/out/$NAME.zip" "dist/$NAME-$VERSION-windows-${{ matrix.arch }}.zip"
 
       - name: Archive (Linux)
         if: matrix.target == 'linux'
+        shell: bash
         run: |
           mkdir -p dist
           cp "build/out/$NAME.tar.gz" "dist/$NAME-$VERSION-linux-${{ matrix.arch }}.tar.gz"
