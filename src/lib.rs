@@ -892,6 +892,30 @@ mod tests {
     }
 
     #[test]
+    fn all_damage_affixes_are_localized() {
+        let d = db();
+        for lang in ["zh-Hans", "zh-Hant", "ru", "de", "ja", "pl"] {
+            let text = d
+                .translated(&d.affix_i18n, "+10% to All Damage", lang)
+                .unwrap_or_default();
+            assert!(!text.is_empty(), "{}: missing translation", lang);
+            assert_ne!(text, "+10% to All Damage", "{}: English fallback", lang);
+        }
+        let detail: Value = serde_json::from_str(&Db::detail(
+            "legendary2_staff06b".into(),
+            "zh-Hans".into(),
+        ))
+        .unwrap();
+        let effects = detail["effects"].as_array().unwrap();
+        assert!(effects
+            .iter()
+            .any(|e| e.as_str().unwrap_or("").contains("所有伤害")));
+        assert!(effects
+            .iter()
+            .all(|e| !e.as_str().unwrap_or("").contains("to All Damage")));
+    }
+
+    #[test]
     fn dps_matches_the_original_qitems_formula() {
         // crossbow_m01: (13+25)/(2*0.56) = 33.9 -> Access Round = 34
         let it = db()

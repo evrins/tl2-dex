@@ -92,11 +92,13 @@ with the save editor, then build the two tables:
 python3 scripts/build_affix_i18n.py --translations /tmp/tl2-trans/TRANSLATIONS
 ```
 
-`data/affix_i18n.json` covers all 2062 distinct affix/set lines in all six
+`data/affix_i18n.json` maps all 2062 distinct affix/set lines to the six
 non-English languages: each English line is matched against the game's
 `[VALUE]` / `[DURATION]` / `[DMGTYPE]` / `[NAME]` templates, captures are
 substituted into the localized template, `[DMGTYPE]` uses the localized element
-name, and `Weapon:` / `Armor/Trinket:` prefixes are localized too.
+name, and `Weapon:` / `Armor/Trinket:` prefixes are localized too. Lines the
+game ships in English (the `All Damage` affixes) are filled from
+`ALL_DAMAGE_FORMS` in the builder; the remaining ones fall back to English.
 `data/descriptions.json` covers 1785 of the 1894 distinct descriptions (the
 rest fall back to English). Both are read by `Db.detail`, so the card's
 Description, Random enchantments and Set bonuses follow the language bar.

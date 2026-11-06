@@ -208,6 +208,82 @@ def translate(text: str, tables: dict[str, dict[str, str]], tmpls, ui: dict) -> 
     return result
 
 
+# The `+[VALUE]% to All Damage` family (and its "Damage Taken" / "per monster"
+# siblings) ships untranslated in every official TRANSLATION.DAT: all six
+# tables contain the English line, so `translate()` above returns English for
+# every language. These forms fill that gap from the app's own terminology.
+# `{s}` is the number as written in the database (signed), `{n}` its magnitude.
+ALL_DAMAGE_FORMS: dict[str, dict[str, str]] = {
+    "bonus": {
+        "zh-Hans": "{s}%的所有伤害",
+        "zh-Hant": "{s}%的所有傷害",
+        "ru": "{s}% ко всему урону",
+        "de": "Erhöht jeden Schaden um {n}%",
+        "ja": "全ダメージ{s}%",
+        "pl": "{s}% do wszystkich obrażeń",
+    },
+    "reduced": {
+        "zh-Hans": "遭受的所有伤害降低{s}%",
+        "zh-Hant": "遭受的所有傷害降低{s}%",
+        "ru": "Получаемый урон снижается на {s}%",
+        "de": "Erlittener Schaden wird um {s}% verringert",
+        "ja": "全ダメージを{s}%軽減",
+        "pl": "Otrzymane obrażenia zmniejszone o {s}%",
+    },
+    "per_monster": {
+        "zh-Hans": "3米内每个怪物使承受的所有伤害降低{s}%",
+        "zh-Hant": "3米內每個怪物使承受的所有傷害降低{s}%",
+        "ru": "Получаемый урон снижается на {s}% за каждого монстра в радиусе 3 м",
+        "de": "Erlittener Schaden um {s}% pro Monster innerhalb von 3 m verringert",
+        "ja": "3m以内のモンスター1体につき全ダメージを{s}%軽減",
+        "pl": "Otrzymane obrażenia zmniejszone o {s}% za każdego potwora w promieniu 3 m",
+    },
+}
+
+ALL_DAMAGE_PATTERNS = (
+    (re.compile(r"^([+-]?\d+(?:[.,]\d+)?)% to All Damage$"), "bonus"),
+    (re.compile(r"^All Damage Taken is reduced by ([+-]?\d+(?:[.,]\d+)?)%$"), "reduced"),
+    (re.compile(r"^([+-]?\d+(?:[.,]\d+)?)% All Damage Taken for each monster within 3m$"), "per_monster"),
+)
+
+
+def all_damage_forms(text: str, ui: dict) -> dict[str, str]:
+    """Localized text for an `All Damage` line, including any affix prefix."""
+    normalized = normalize(text)
+    prefix = ""
+    for candidate, key in PREFIXES.items():
+        if normalized.startswith(candidate):
+            prefix = key
+            normalized = normalized[len(candidate) :]
+            break
+    for pattern, family in ALL_DAMAGE_PATTERNS:
+        match = pattern.match(normalized)
+        if not match:
+            continue
+        signed = match.group(1)
+        values = {"s": signed, "n": signed.lstrip("+-")}
+        result = {}
+        for lang, form in ALL_DAMAGE_FORMS[family].items():
+            rendered = form.format(**values)
+            if prefix:
+                rendered = f"{ui[prefix].get(lang, '')}: {rendered}"
+            result[lang] = rendered
+        return result
+    return {}
+
+
+def fill_untranslated(text: str, translated: dict[str, str], ui: dict) -> None:
+    """Replace English-only `All Damage` lines with `ALL_DAMAGE_FORMS`.
+
+    A translation that still contains "All Damage" is one the game tables left
+    in English; keep any future localized line that no longer contains it.
+    """
+    for lang, value in all_damage_forms(text, ui).items():
+        current = translated.get(lang)
+        if current is None or "All Damage" in current:
+            translated[lang] = value
+
+
 ELEMENTS: dict[str, dict[str, str]] = {}
 
 
@@ -252,6 +328,7 @@ def main() -> None:
     affix_out: dict[str, dict[str, str]] = {}
     for text in sorted(affix_texts):
         translated = translate(text, tables, tmpls, ui)
+        fill_untranslated(text, translated, ui)
         if translated:
             affix_out[text] = translated
 
