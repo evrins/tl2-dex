@@ -1,8 +1,10 @@
 import type { JSX } from "nsh/types";
 import { Clipboard, Image, List, Scroll, Text, View, computed, effect, mount, signal } from "nsh";
 
-import { Input } from "nsh/base";
+import { Input, Link } from "nsh/base";
 import { Db } from "tidbi/native";
+
+const GITHUB_URL = "https://github.com/evrins/tl2-dex";
 
 // ---------------------------------------------------------------------------
 // Data types (the Rust module returns JSON strings)
@@ -672,24 +674,45 @@ function App() {
       <View style={{ height: 46, flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 10, backgroundColor: C.panel, borderBottomWidth: 1, borderBottomColor: C.line }}>
         <Text style={{ color: C.gold, fontSize: 15, fontWeight: "700" }}>Torchlight II · Item Database</Text>
         <View style={{ width: 12 }} />
-        <Input
-          value={q()}
-          onChange={({ value }) => q.set(value)}
-          onSubmit={() => apply()}
-          placeholder={t("ui.search_placeholder")}
-          returnKeyType="search"
+        <View
           style={{
             width: 280,
             height: 29,
-            paddingHorizontal: 9,
+            flexDirection: "row",
+            alignItems: "center",
             borderRadius: 5,
             borderWidth: 1,
             borderColor: C.line,
             backgroundColor: C.panel2,
-            color: C.text,
-            fontSize: 13,
           }}
-        />
+        >
+          <Input
+            testID="search"
+            value={q()}
+            onChange={({ value }) => q.set(value)}
+            onSubmit={() => apply()}
+            placeholder={t("ui.search_placeholder")}
+            returnKeyType="search"
+            style={{
+              flex: 1,
+              height: 27,
+              paddingHorizontal: 9,
+              backgroundColor: "transparent",
+              color: C.text,
+              fontSize: 13,
+            }}
+          />
+          <If when={q() !== ""}>
+            <View
+              role="button"
+              accessibilityLabel={t("ui.clear_search")}
+              onPress={() => q.set("")}
+              style={{ width: 24, height: 27, alignItems: "center", justifyContent: "center" }}
+            >
+              <Text style={{ color: C.muted, fontSize: 15, fontWeight: "700" }}>×</Text>
+            </View>
+          </If>
+        </View>
         <Btn label={t("ui.search")} onPress={() => apply()} />
         <View style={{ flex: 1 }} />
         <Btn label={t(showText() ? "ui.show_picture" : "ui.show_text")} onPress={() => showText.set(!showText())} />
@@ -913,6 +936,9 @@ function App() {
             <Text style={{ color: C.text, fontSize: 13 }}>v1.05 (eng) · Rust + GPUI + TSX reimplementation</Text>
             <Text style={{ color: C.muted, fontSize: 12 }}>Original: MyTorchlight.ru / Abramoff, 2013–2014 (Delphi 7 + ADO/Jet)</Text>
             <Text style={{ color: C.muted, fontSize: 12 }}>Data: base.mdb exported with mdbtools; icons from ./icons</Text>
+            <Link href={GITHUB_URL} accessibilityLabel="GitHub">
+              <Text style={{ color: C.rare, fontSize: 12 }}>{GITHUB_URL}</Text>
+            </Link>
             <Text style={{ color: C.muted, fontSize: 12 }}>Right panel: Lock freezes the card for comparison. Favorites persist via NSH Storage.</Text>
             <View style={{ height: 8 }} />
             <Btn label={t("ui.ok")} onPress={() => about.set(false)} />

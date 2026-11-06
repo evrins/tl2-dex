@@ -1,5 +1,7 @@
 # tl2-dex — Torchlight II Item Database
 
+[GitHub repository](https://github.com/evrins/tl2-dex)
+
 A native reimplementation of the 2014 `TIDBI.exe` (Delphi 7 + ADO/Jet) item
 browser, built with **Rust + GPUI + TSX** through
 [Native Shell](https://nsh.dev) 0.4:

@@ -84,6 +84,30 @@ test("toolbar and panel controls follow the language", async () => {
   expect(app.texts()).toContain("确定");
 });
 
+test("the search box's clear button empties it", async () => {
+  const app = await open("./App.tsx", { width: 1200, height: 900 });
+  const search = "id:search";
+  expect(app.shows("label:Clear search")).toBe(false);
+  await app.type(search, "Peasant");
+  await app.submit(search);
+  await app.wait(200);
+  expect(app.value(search)).toBe("Peasant");
+  expect(app.texts()).not.toContain("6050 / 6050 items");
+  await app.press("Clear search");
+  await app.wait(200);
+  expect(app.value(search)).toBe("");
+  expect(app.texts()).toContain("6050 / 6050 items");
+  expect(app.shows("label:Clear search")).toBe(false);
+});
+
+test("the About box links to the repository", async () => {
+  const app = await open("./App.tsx", { width: 1200, height: 900 });
+  await app.press("About");
+  expect(app.texts()).toContain("https://github.com/evrins/tl2-dex");
+  await app.press("GitHub");
+  expect(app.openedUrls()).toContain("https://github.com/evrins/tl2-dex");
+});
+
 test("tree categories collapse and expand from their arrows", async () => {
   const app = await open("./App.tsx");
   expect(app.shows("Bows")).toBe(true);

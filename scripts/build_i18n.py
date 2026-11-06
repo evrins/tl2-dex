@@ -148,6 +148,7 @@ TERMS: list[tuple[str, str, str, str, str, str, str, str]] = [
 
     # --- toolbar and panel buttons ---------------------------------------
     ("ui.search", "Search", "搜索", "搜尋", "Поиск", "Suchen", "検索", "Szukaj"),
+    ("ui.clear_search", "Clear search", "清除搜索", "清除搜尋", "Очистить поиск", "Suche löschen", "検索をクリア", "Wyczyść wyszukiwanie"),
     ("ui.search_placeholder", "Search name or internal id (any language)…", "搜索名称或内部名（任意语言）…", "搜尋名稱或內部名（任意語言）…", "Поиск по названию или внутреннему ID (любой язык)…", "Name oder interne ID suchen (beliebige Sprache)…", "名前または内部名を検索（全言語）…", "Szukaj nazwy lub wewnętrznego ID (dowolny język)…"),
     ("ui.show_picture", "Show picture", "显示图片", "顯示圖片", "Показать изображение", "Bild anzeigen", "画像を表示", "Pokaż obraz"),
     ("ui.show_text", "Show text", "显示文本", "顯示文字", "Показать текст", "Text anzeigen", "テキストを表示", "Pokaż tekst"),
