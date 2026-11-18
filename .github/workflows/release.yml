@@ -22,7 +22,7 @@ concurrency:
 
 env:
   # The NSH CLI the app is built with; Cargo.toml depends on the same release.
-  NSH_VERSION: v0.5.1
+  NSH_VERSION: v0.6.0
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: "0"
 

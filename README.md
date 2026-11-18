@@ -4,7 +4,7 @@
 
 A native reimplementation of the 2014 `TIDBI.exe` (Delphi 7 + ADO/Jet) item
 browser, built with **Rust + GPUI + TSX** through
-[Native Shell](https://nsh.dev) 0.5:
+[Native Shell](https://nsh.dev) 0.6:
 
 - **Rust** (`src/lib.rs`) owns the data: it embeds the exported `base.mdb`,
   reimplements the original SQL filters (tree categories, rarity, stat ranges,
@@ -123,7 +123,7 @@ nsh test                        # cargo test + headless UI tests
 cargo test                      # data/query unit tests
 ```
 
-Needs the 0.5 CLI (`nsh --version`); `cargo test` alone needs no `nsh`.
+Needs the 0.6 CLI (`nsh --version`); `cargo test` alone needs no `nsh`.
 
 ### Web target
 
@@ -152,8 +152,8 @@ the app's `nsh/assets/…`.
 ### Deploy (Cloudflare Workers)
 
 `nsh package --target web` writes a static site — `index.html`,
-`nsh.<digest>.wasm` (13.6 MB), `app.<digest>.js`, `assets/…` — into
-`.nsh/out/tl2-dex`, 1144 files. `wrangler.jsonc` uploads that directory as a
+`nsh.<digest>.wasm` (14 MB), `app.<digest>.js`, `assets/…` — into
+`.nsh/out/tl2-dex`, 1168 files. `wrangler.jsonc` uploads that directory as a
 static-only Worker: it declares no `main`, so every request is an asset and
 none is billed as a Worker invocation.
 
