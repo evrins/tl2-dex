@@ -100,10 +100,13 @@ test("the search box's clear button empties it", async () => {
   expect(app.shows("label:Clear search")).toBe(false);
 });
 
-test("the About box links to the repository", async () => {
+test("the About box links to the repository and shows the build's commit", async () => {
   const app = await open("./App.tsx", { width: 1200, height: 900 });
   await app.press("About");
-  expect(app.texts()).toContain("https://github.com/evrins/tl2-dex");
+  const gitHash = JSON.parse(Db.options()).gitHash as string;
+  const texts = app.texts();
+  expect(texts).toContain(`git ${gitHash}`);
+  expect(texts).toContain("https://github.com/evrins/tl2-dex");
   await app.press("GitHub");
   expect(app.openedUrls()).toContain("https://github.com/evrins/tl2-dex");
 });

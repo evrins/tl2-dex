@@ -21,6 +21,8 @@ const AFFIX_JSON: &str = include_str!("../data/affix_i18n.json");
 const DESCRIPTIONS_JSON: &str = include_str!("../data/descriptions.json");
 const SET_NAMES_JSON: &str = include_str!("../data/set_names.json");
 const I18N_JSON: &str = include_str!("../data/i18n.json");
+/// Short commit hash written by `build.rs` at compile time.
+const GIT_HASH: &str = env!("TL2_DEX_GIT_HASH");
 /// Icons ship as this crate's assets (`assets/icons/`, `assets!()`), so every
 /// target — the web build included, which has no file system — loads them
 /// through NSH's asset URLs instead of `data:` URIs built by reading files.
@@ -567,6 +569,7 @@ impl Db {
                 "sets": d.set_list.len(),
                 "icons": icons,
             },
+            "gitHash": GIT_HASH,
             "tree": tree,
             "rarities": ["Common", "Rare", "Unique", "Legendary", "Quest item"],
             "stats": ["Level", "DPS", "Physical Damage", "Ice Damage", "Fire Damage",

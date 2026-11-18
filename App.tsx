@@ -75,6 +75,7 @@ const EMPTY_DETAIL: Detail = {
 };
 const OPT: {
   counts: { items: number; effects: number; sets: number; icons: number };
+  gitHash: string;
   tree: TreeNode[];
   rarities: string[];
   stats: string[];
@@ -934,6 +935,7 @@ function App() {
           <View style={{ width: 420, padding: 22, borderRadius: 10, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, gap: 8 }}>
             <Text style={{ color: C.gold, fontSize: 20, fontWeight: "700" }}>Torchlight II Item Database</Text>
             <Text style={{ color: C.text, fontSize: 13 }}>v1.05 (eng) · Rust + GPUI + TSX reimplementation</Text>
+            <Text style={{ color: C.faint, fontSize: 12 }}>git {OPT.gitHash}</Text>
             <Text style={{ color: C.muted, fontSize: 12 }}>Original: MyTorchlight.ru / Abramoff, 2013–2014 (Delphi 7 + ADO/Jet)</Text>
             <Text style={{ color: C.muted, fontSize: 12 }}>Data: base.mdb exported with mdbtools; icons from ./icons</Text>
             <Link href={GITHUB_URL} accessibilityLabel="GitHub">

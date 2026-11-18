@@ -21,6 +21,7 @@ browser, built with **Rust + GPUI + TSX** through
 | Path | What |
 |---|---|
 | `nsh.json`, `tsconfig.json`, `Cargo.toml` | NSH app / TS / Rust crate |
+| `build.rs` | Bakes the current short Git commit hash into the native module; the About box shows it |
 | `icon.png` | app icon (`nsh.json` `"icon"`): the 2014 tool's 256 px emblem on the app's `#12141a`, 1024 px; `nsh package` derives the favicon (32), `apple-touch-icon` (180) and manifest icons (192, 512) from it |
 | `App.tsx` | TSX UI, imports `Db` from `tidbi/native` |
 | `src/lib.rs` | Rust native module `Db` + data/query engine + unit tests |
@@ -124,6 +125,8 @@ cargo test                      # data/query unit tests
 ```
 
 Needs the 0.6 CLI (`nsh --version`); `cargo test` alone needs no `nsh`.
+The About box shows the short commit hash from the build; a source archive
+without Git shows `unknown`.
 
 ### Web target
 
